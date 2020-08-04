@@ -2,6 +2,7 @@
 #Libraries.
 #==============================================================================
 from os import path
+from win32com.client import Dispatch
 
 #==============================================================================
 #Functions.
@@ -19,13 +20,24 @@ def askForMonth():
             print('\n¡¡Valor no válido!! Ingresa un mes en el formato indicado\n')
     
     return month, year
+
+#Create Restrictions table from IPOEMP table
+def createRestrictionsTable(month, year):
+    wbIPOEMP = xl.Workbooks.Open(Filename = thisFolderPath + "\\"+IPOEMPfilename)   #Load IPOEMP excel file
+    wbRestricciones = xl.Workbooks.Add()                                            #Create new excel file
+
+    wsIPOEMP = wbIPOEMP.Worksheets('Restricciones').Copy(Before=wbRestricciones.Worksheets(1)) #Copy 'Restricciones' page to new file
     
+    wbIPOEMP.Close(False)           #Close IPOEMP file without saving changes
+    wbRestricciones.Close(True, thisFolderPath + "\\"+year+"-"+ month+"_Restricciones.xlsx") #Close new file saving changes
+
 
 #==============================================================================
 #Main.
 #==============================================================================
 def main():
     month, year=askForMonth()
+    createRestrictionsTable(month, year)
 
 
 
@@ -38,18 +50,10 @@ if __name__ == "__main__":
     #Paths
     thisFilePath = path.abspath(__file__)
     thisFolderPath = path.dirname(thisFilePath)
-
-    ruta_mapeo = r'\\archivosxm\AseguramientoOperacion\08.Seguimiento_Postoperativo\04.Seguimiento_AGC\01.Seguimiento_Diario'
-    ruta_resultados = r'\\archivosxm\AseguramientoOperacion\08.Seguimiento_Postoperativo\04.Seguimiento_AGC\01.Seguimiento_Diario'
-    ruta_imagenes = r'\\archivosxm\AseguramientoOperacion\08.Seguimiento_Postoperativo\04.Seguimiento_AGC\01.Seguimiento_Diario\Imagenes'
-    ruta_plantilla_ReporteAGC = r'\\archivosxm\AseguramientoOperacion\08.Seguimiento_Postoperativo\04.Seguimiento_AGC\03.Macros y Plantillas'
-    Umbral_Unidades=[50,50,50,50,50]
-    Umbral_GR=[50,50,50]
-    Umbral_SC=[50,50,70]
-    intervalo=4
-    umbral_error_int_real=35
-    umbral_error_int_prog=50
-    umbral_error=5
+    #Excel application
+    xl = Dispatch("Excel.Application")
+    #Needed files
+    IPOEMPfilename = 'TablaRestricciones.xlsx'
 
     #-----------------------------------------
     # run main.
