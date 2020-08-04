@@ -22,14 +22,20 @@ def askForMonth():
     return month, year
 
 #Create Restrictions table from IPOEMP table
-def createRestrictionsTable(month, year):
+def createRestrictionsTable(month, year, trimester):
     wbIPOEMP = xl.Workbooks.Open(Filename = thisFolderPath + "\\"+IPOEMPfilename)   #Load IPOEMP excel file
-    wbRestricciones = xl.Workbooks.Add()                                            #Create new excel file
+    wbRestricciones = xl.Workbooks.Add()    #Create new excel file
+    wsIPOEMP = wbIPOEMP.Worksheets('Restricciones')
 
-    wsIPOEMP = wbIPOEMP.Worksheets('Restricciones').Copy(Before=wbRestricciones.Worksheets(1)) #Copy 'Restricciones' page to new file
-    
+    lastRow = wsIPOEMP.UsedRange.Rows.Count     #Get last row value    
+    #*This could be improved by removing the 7*
+    lastCol = 7
+    wsIPOEMP.Range("A1", wsIPOEMP.Cells(lastRow, lastCol)).Copy()     #Copy the needed range
+    wbRestricciones.ActiveSheet.Paste(wbRestricciones.ActiveSheet.Cells(1,1))   #Paste the needed range
+    wbRestricciones.ActiveSheet.Cells(1, lastCol+1).Value = "Corte Python"
+    wbRestricciones.ActiveSheet.Cells(1, lastCol+2).Value = "¿Superó corte?"
     wbIPOEMP.Close(False)           #Close IPOEMP file without saving changes
-    wbRestricciones.Close(True, thisFolderPath + "\\"+year+"-"+ month+"_Restricciones.xlsx") #Close new file saving changes
+    wbRestricciones.Close(True, thisFolderPath + "\\"+year+"-"+ month+"_Restricciones_"+year+"_T"+str(trimester)+".xlsx") #Close new file saving changes
 
 
 #==============================================================================
@@ -37,7 +43,8 @@ def createRestrictionsTable(month, year):
 #==============================================================================
 def main():
     month, year=askForMonth()
-    createRestrictionsTable(month, year)
+    trimester = (int(month)-1)//3 +1
+    createRestrictionsTable(month, year, trimester)
 
 
 
