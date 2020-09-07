@@ -3,6 +3,7 @@
 #==============================================================================
 from os import path
 from win32com.client import Dispatch
+from createCortes import *
 
 #==============================================================================
 #Functions.
