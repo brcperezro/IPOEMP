@@ -24,37 +24,61 @@ class createCortes:
         self.trimester = trimester
         self.dictName = dictName
     
-    #function used to split the text into different tags
-    def separateTags(self, text, iCorte):
+        #function used to split the text into different tags
+    def separateTags(self, text, MWlimit):
         text=text.replace(" ", "")  #removes all the spaces
         cortes = []
-        a=b=0
+        iCorte=0
         cortes.append([])
-        for rLetter in text:
+        for Letter, iLetter in zip(text, range(len(text))):
             #condition used to remove sobrecargas and sobretensiones
-            if iCorte==None or iCorte=="-" or iCorte==" ":
+            if MWlimit==None or MWlimit=="-" or MWlimit==" ":
                 iNumTags ="null"
                 return cortes, iNumTags
-                break
             
             # "/" and "+" are commonly used to separate Tags
-            if rLetter == "/" or rLetter == "+":
+            if Letter == "/" or Letter == "+":
                 # Checks if the "/" is for transformators ratio (and not to separate Tags)
-                if rLetter == "/" and text[a-1].isdigit() and text[a+1].isdigit():
-                    cortes[b].append(rLetter)
-                    a+=1
+                if Letter == "/" and text[iLetter-1].isdigit() and text[iLetter+1].isdigit():
+                    cortes[iCorte].append(Letter)
                     continue
                 # If it is "+" or "/" to separate Tags
                 else:
-                    b+=1
+                    iCorte+=1
                     cortes.append([])
-                    a+=1
                     continue
-            cortes[b].append(rLetter)
-            a+=1
-        iNumTags = b+1
+            #if the letter is not "/" nor "+"
+            cortes[iCorte].append(Letter)   #appends the letter to the string
+        iNumTags = iCorte+1
         return cortes, iNumTags
 
+        #function used to split the text into different tags
+    def separateTags2(self, text, MWlimit):
+        text=text.replace(" ", "")  #removes all the spaces
+        cortes = []
+        iCorte=0
+        cortes.append('')
+        for Letter, iLetter in zip(text, range(len(text))):
+            #condition used to remove sobrecargas and sobretensiones
+            if MWlimit==None or MWlimit=="-" or MWlimit==" ":
+                iNumTags ="null"
+                return cortes, iNumTags
+            
+            # "/" and "+" are commonly used to separate Tags
+            if Letter == "/" or Letter == "+":
+                # Checks if the "/" is for transformators ratio (and not to separate Tags)
+                if Letter == "/" and text[iLetter-1].isdigit() and text[iLetter+1].isdigit():
+                    cortes[iCorte]+=Letter  #appends the letter to the string
+                    continue
+                # If it is "+" or "/" to separate Tags
+                else:
+                    iCorte+=1
+                    cortes.append('')   #Creates new string
+                    continue
+            #if the letter is not "/" nor "+"
+            cortes[iCorte]+=Letter   #appends the letter to the string
+        iNumTags = iCorte+1
+        return cortes, iNumTags
 
 #=================================================================================
     def runCreateCortes(self): 
@@ -72,24 +96,9 @@ class createCortes:
 
         for iRow in range (2,3):#(2, column+1):
             text = wsRestric.cell(row=iRow, column=3).value
-            Cortes, iNumTags = self.separateTags(text, wsRestric.cell(row=iRow, column=7).value)
-            print (Cortes, iNumTags)
+            Cortes, iNumTags = self.separateTags(text, wsRestric.cell(row=iRow, column=7).value) #gets original strings
+            Cortes2, iNumTags2 = self.separateTags2(text, wsRestric.cell(row=iRow, column=7).value) #gets strings concatenated
 
-
-# #laksjflasfdlkajsfdlkjaslkdf
-#         for iFila in range(2,columna+1):
-#             texto=sheet.cell(row=iFila,column=3).value
-#             cortes,iNumTags=separar(texto,sheet.cell(row=iFila,column=7).value)
-#             if iNumTags=="null":
-#                 continue
-#             for iColumna in range(0,iNumTags):
-#                 clave=''.join(cortes[iColumna]) #concatenar
-#                 sP,sPQC,sQ,sQC=encontrar(clave,sheet2.max_row)
-#                 iValorCorte=sheet.cell(row=iFila,column=7).value
-#                 sArea=sheet.cell(row=iFila,column=1).value
-#                 dfDatos=escribir_csv(sP,sPQC,sQ,sQC,iCantidadCortes,iValorCorte,sArea,dfDatos)
-#             sheet.cell(row=iFila,column=8).value=str(iCantidadCortes)
-#             iCantidadCortes+=1
 
 #==============================================================================
 #Main.
