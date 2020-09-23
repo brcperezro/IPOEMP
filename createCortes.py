@@ -62,8 +62,7 @@ class createCortes:
             #condition used to remove sobrecargas and sobretensiones
             if MWlimit==None or MWlimit=="-" or MWlimit==" ":
                 iNumTags ="null"
-                return cortes, iNumTags
-            
+                return cortes, iNumTags 
             # "/" and "+" are commonly used to separate Tags
             if Letter == "/" or Letter == "+":
                 # Checks if the "/" is for transformators ratio (and not to separate Tags)
@@ -79,25 +78,53 @@ class createCortes:
             cortes[iCorte]+=Letter   #appends the letter to the string
         iNumTags = iCorte+1
         return cortes, iNumTags
+    
+    #Function that looks for Corte in Dictionary and returns the related tags
+    def findTag(self, key, maxCol, wsDict):
+        P = 'NOT FOUND'
+        Pqc = 'NOT FOUND'
+        Q = 'NOT FOUND'
+        Qqc = 'NOT FOUND' 
+        key=key.replace(" ","").replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u").replace("\n","").replace("KV","").replace(".","").replace("-","").replace("–","").upper()
+
+        for iFila in range(2,maxCol+1):
+            value=str(wsDict.cell(row=iFila,column=1).value).replace(" ","").replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u").replace("\n","").replace("KV","").replace(".","").replace("-","").replace("–","").upper()
+            if key==value:
+                P=wsDict.cell(row=iFila,column=2).value
+                Pqc=wsDict.cell(row=iFila,column=3).value
+                Q=wsDict.cell(row=iFila,column=4).value
+                Qqc=wsDict.cell(row=iFila,column=5).value
+                break
+    
+        return P,Pqc,Q,Qqc
+
 
 #=================================================================================
     def runCreateCortes(self): 
 #=================================================================================
         fileName = str(self.year) + '-' + str(self.month) + '_Restricciones_'+str(self.year)+'_T'+str(self.trimester)+'.xlsx'
         wbRestric = load_workbook(thisFolderPath+'\\'+fileName)     #Load Restricciones workbook
-        wbDict = load_workbook(thisFolderPath+'\\'+fileName)        #Load Diccionario workbook
+        wbDict = load_workbook(thisFolderPath+'\\'+self.dictName)        #Load Diccionario workbook
         dicData = []
         dfData = DataFrame([],columns=['P','Pcalidad','Q','Qcalidad','SubArea','Corte','Pmax'])
         wsRestric = wbRestric.active        #Get active worksheet on Restricciones workbook
         wsDict = wbDict.active              #Get active worksheet on Diccionario workbook
-        column = wsRestric.max_row          #Get the max column value on Restricciones table
+        maxColumnRest = wsRestric.max_row          #Get the max column value on Restricciones table
         iCantCortes = 1                     #Counter of Cortes to mark in the .csv file
 
 
-        for iRow in range (2,3):#(2, column+1):
+        for iRow in range (2,3):#(2, maxColumnRest+1):
             text = wsRestric.cell(row=iRow, column=3).value
             Cortes, iNumTags = self.separateTags(text, wsRestric.cell(row=iRow, column=7).value) #gets original strings
             Cortes2, iNumTags2 = self.separateTags2(text, wsRestric.cell(row=iRow, column=7).value) #gets strings concatenated
+            if iNumTags2 == "Null":
+                continue
+            for iCorte in Cortes2:
+                sP, sPqc, sQ, sQqc = self.findTag(iCorte, wsDict.max_row, wsDict)
+                iCorteValue = wsRestric.cell(row=iRow, column=7).value
+                sArea = wsRestric.cell(row=iRow, column=1).value
+                #dfData = writeCSV(sP, sPqc, sQ, sQqc, iCantCortes, sArea, dfDatos) 
+
 
 
 #==============================================================================

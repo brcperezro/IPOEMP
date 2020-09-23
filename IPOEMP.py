@@ -46,6 +46,8 @@ def main():
     month, year=askForMonth()                       #Get month and year form user
     trimester = (int(month)-1)//3 +1                #Calculate trimester
     createRestrictionsTable(month, year, trimester) #Create Restrictions table from IPOEMP table
+    cortes = createCortes(month, year, trimester, dictName) #Create Class taken from createCortes.py
+    cortes.runCreateCortes()
 
 
 #==============================================================================
@@ -60,7 +62,8 @@ if __name__ == "__main__":
     #Excel application
     xl = Dispatch("Excel.Application")
     #Needed files
-    IPOEMPfilename = 'TablaRestricciones.xlsx'
+    IPOEMPfilename = 'TablaRestricciones.xlsx'  #Restrictions filename
+    dictName = 'diccionario.xlsx'               #Dictionary filename
 
     #-----------------------------------------
     # run main.
