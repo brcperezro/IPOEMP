@@ -58,11 +58,13 @@ class createCortes:
         cortes = []
         iCorte=0
         cortes.append('')
+
+        #condition used to remove sobrecargas and sobretensiones
+        if MWlimit==None or MWlimit=="-" or MWlimit==" ":
+            iNumTags ="Null"
+            return cortes, iNumTags 
+
         for Letter, iLetter in zip(text, range(len(text))):
-            #condition used to remove sobrecargas and sobretensiones
-            if MWlimit==None or MWlimit=="-" or MWlimit==" ":
-                iNumTags ="null"
-                return cortes, iNumTags 
             # "/" and "+" are commonly used to separate Tags
             if Letter == "/" or Letter == "+":
                 # Checks if the "/" is for transformators ratio (and not to separate Tags)
@@ -85,10 +87,11 @@ class createCortes:
         Pqc = 'NOT FOUND'
         Q = 'NOT FOUND'
         Qqc = 'NOT FOUND' 
-        key=key.replace(" ","").replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u").replace("\n","").replace("KV","").replace(".","").replace("-","").replace("–","").upper()
+        #remove the special characters in key string
+        key=key.replace(" ","").replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u").replace("\n","").upper().replace("KV","").replace(".","").replace("-","").replace("–","")
 
         for iFila in range(2,maxCol+1):
-            value=str(wsDict.cell(row=iFila,column=1).value).replace(" ","").replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u").replace("\n","").replace("KV","").replace(".","").replace("-","").replace("–","").upper()
+            value=(str(wsDict.cell(row=iFila,column=1).value).replace(" ","").replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u").replace("\n","").upper()).replace("KV","").replace(".","").replace("-","").replace("–","")
             if key==value:
                 P=wsDict.cell(row=iFila,column=2).value
                 Pqc=wsDict.cell(row=iFila,column=3).value
@@ -98,6 +101,9 @@ class createCortes:
     
         return P,Pqc,Q,Qqc
 
+    def writeCSV(self, sP, sPqc, sQ, sQqc, iCorte, iCorteValue, sArea, dfData):
+        dfData = dfData.append({'P':sP, 'Pcalidad':sPqc, 'Q':sQ, 'Qcalidad':sQqc, 'SubArea':sArea, 'Corte':iCorte, 'Pmax':iCorteValue}, ignore_index=True)
+        return dfData
 
 #=================================================================================
     def runCreateCortes(self): 
@@ -109,24 +115,25 @@ class createCortes:
         dfData = DataFrame([],columns=['P','Pcalidad','Q','Qcalidad','SubArea','Corte','Pmax'])
         wsRestric = wbRestric.active        #Get active worksheet on Restricciones workbook
         wsDict = wbDict.active              #Get active worksheet on Diccionario workbook
-        maxColumnRest = wsRestric.max_row          #Get the max column value on Restricciones table
-        iCantCortes = 1                     #Counter of Cortes to mark in the .csv file
+        maxColumnRest = wsRestric.max_row   #Get the max column value on Restricciones table
+        iCantCortes = 0                     #Counter of Cortes to mark in the .csv file
 
-
-        for iRow in range (2,3):#(2, maxColumnRest+1):
+        for iRow in range(2, maxColumnRest+1):
             text = wsRestric.cell(row=iRow, column=3).value
             Cortes, iNumTags = self.separateTags(text, wsRestric.cell(row=iRow, column=7).value) #gets original strings
             Cortes2, iNumTags2 = self.separateTags2(text, wsRestric.cell(row=iRow, column=7).value) #gets strings concatenated
             if iNumTags2 == "Null":
                 continue
+            iCantCortes+=1
             for iCorte in Cortes2:
                 sP, sPqc, sQ, sQqc = self.findTag(iCorte, wsDict.max_row, wsDict)
                 iCorteValue = wsRestric.cell(row=iRow, column=7).value
                 sArea = wsRestric.cell(row=iRow, column=1).value
-                #dfData = writeCSV(sP, sPqc, sQ, sQqc, iCantCortes, sArea, dfDatos) 
-
-
-
+                dfData = self.writeCSV(sP, sPqc, sQ, sQqc, iCantCortes, iCorteValue, sArea, dfData) 
+            wsRestric.cell(row=iRow, column=8).value=str(iCantCortes)
+        
+        wbRestric.save(thisFolderPath+'\\'+fileName) #Save the restrictions workbook
+        dfData.to_csv(thisFolderPath+'\\'+'Cortes_creados_'+year+'-'+month+'.csv', sep=';', index=False) #Save the dfData to a CSV file
 #==============================================================================
 #Main.
 #==============================================================================
