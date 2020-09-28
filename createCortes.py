@@ -33,7 +33,7 @@ class createCortes:
         for Letter, iLetter in zip(text, range(len(text))):
             #condition used to remove sobrecargas and sobretensiones
             if MWlimit==None or MWlimit=="-" or MWlimit==" ":
-                iNumTags ="null"
+                iNumTags ="Null"
                 return cortes, iNumTags
             
             # "/" and "+" are commonly used to separate Tags
@@ -86,19 +86,19 @@ class createCortes:
         P = 'NOT FOUND'
         Pqc = 'NOT FOUND'
         Q = 'NOT FOUND'
-        Qqc = 'NOT FOUND' 
+        Qqc = 'NOT FOUND'
         #remove the special characters in key string
         key=key.replace(" ","").replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u").replace("\n","").upper().replace("KV","").replace(".","").replace("-","").replace("–","")
-
+        #Looks for the key in the Dictionary
         for iFila in range(2,maxCol+1):
             value=(str(wsDict.cell(row=iFila,column=1).value).replace(" ","").replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u").replace("\n","").upper()).replace("KV","").replace(".","").replace("-","").replace("–","")
+            # If find the key, take the tags from the dictionary
             if key==value:
                 P=wsDict.cell(row=iFila,column=2).value
                 Pqc=wsDict.cell(row=iFila,column=3).value
                 Q=wsDict.cell(row=iFila,column=4).value
                 Qqc=wsDict.cell(row=iFila,column=5).value
                 break
-    
         return P,Pqc,Q,Qqc
 
     def writeCSV(self, sP, sPqc, sQ, sQqc, iCorte, iCorteValue, sArea, dfData):
@@ -111,21 +111,24 @@ class createCortes:
         fileName = str(self.year) + '-' + str(self.month) + '_Restricciones_'+str(self.year)+'_T'+str(self.trimester)+'.xlsx'
         wbRestric = load_workbook(thisFolderPath+'\\'+fileName)     #Load Restricciones workbook
         wbDict = load_workbook(thisFolderPath+'\\'+self.dictName)        #Load Diccionario workbook
-        dicData = []
         dfData = DataFrame([],columns=['P','Pcalidad','Q','Qcalidad','SubArea','Corte','Pmax'])
         wsRestric = wbRestric.active        #Get active worksheet on Restricciones workbook
         wsDict = wbDict.active              #Get active worksheet on Diccionario workbook
         maxColumnRest = wsRestric.max_row   #Get the max column value on Restricciones table
         iCantCortes = 0                     #Counter of Cortes to mark in the .csv file
 
+        # Iterates over all rows in Restrictions ws
         for iRow in range(2, maxColumnRest+1):
             text = wsRestric.cell(row=iRow, column=3).value
-            Cortes, iNumTags = self.separateTags(text, wsRestric.cell(row=iRow, column=7).value) #gets original strings
+            #Cortes, iNumTags = self.separateTags(text, wsRestric.cell(row=iRow, column=7).value) #gets original strings
             Cortes2, iNumTags2 = self.separateTags2(text, wsRestric.cell(row=iRow, column=7).value) #gets strings concatenated
+            # If MWlimit is Null, it is not considered
             if iNumTags2 == "Null":
                 continue
+            # If MWlimit is different to Null, counts a new Corte
             iCantCortes+=1
             for iCorte in Cortes2:
+                #Looks for tag in dictionary
                 sP, sPqc, sQ, sQqc = self.findTag(iCorte, wsDict.max_row, wsDict)
                 iCorteValue = wsRestric.cell(row=iRow, column=7).value
                 sArea = wsRestric.cell(row=iRow, column=1).value
@@ -133,7 +136,7 @@ class createCortes:
             wsRestric.cell(row=iRow, column=8).value=str(iCantCortes)
         
         wbRestric.save(thisFolderPath+'\\'+fileName) #Save the restrictions workbook
-        dfData.to_csv(thisFolderPath+'\\'+'Cortes_creados_'+year+'-'+month+'.csv', sep=';', index=False) #Save the dfData to a CSV file
+        dfData.to_csv(thisFolderPath+'\\'+'Cortes_creados_'+self.year+'-'+self.month+'.csv', sep=',', index=False) #Save the dfData to a CSV file
 #==============================================================================
 #Main.
 #==============================================================================
