@@ -73,7 +73,8 @@ def main():
     cortes.runCreateCortes() #Create file 'Cortes creados' from Dictionary
     bContinue = verifyNotFoundTags(month, year) #Verify if there are not found tags 
     
-
+    if bContinue:
+        print('Pasando a la siguiente parte...')
 #==============================================================================
 #CODE STARTS HERE!!!!!
 #==============================================================================
